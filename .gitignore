@@ -1,6 +1,6 @@
 .idea/
 log/*.log
-log/
+!log/
 setting/prod_setting.cfg
 setting/prod_setting.xml
 *.pyc
