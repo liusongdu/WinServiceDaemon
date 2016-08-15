@@ -6,11 +6,17 @@ import datetime
 import os
 import time
 from ConfigurationReader import ConfigurationReader  # 前面是模块名，后面是类名
+from mail_sender import mail_sender
+
 
 timeformat = '%Y-%m-%d %H:%M:%S'
 
 c = ConfigurationReader()
-STATIC_SETTING_base_dir = c.read_configuration('path', 'base_dir')
+STATIC_SETTING_base_dir, STATIC_SETTING_subfolder = c.read_configuration('path', 'base_dir', 'subfolder')
+
+# c = ConfigurationReader()
+# SETTING_subfolder = c.read_configuration('path', 'subfolder')
+subfolder_list = STATIC_SETTING_subfolder.split(', ')
 
 class Timeconvert(object):
     """convert datetime to float
@@ -83,7 +89,9 @@ class OldFileCleaner(object):
             filelist.append(list[i])
     '''
 
-    def check_file_age(self, age_day, age_hour, subfolder_list):
+    def check_file_age(self):
+        age_day = 2
+        age_hour = 0
         file_list = self.list_file(subfolder_list)
         delete_file = {}
         for i in range(0, len(file_list)):
@@ -110,7 +118,7 @@ class OldFileCleaner(object):
         delete_file_str = ''
         for k, v in delete_file.items():
             delete_file_str += '<tr><td>' + k + """</td>
-            <td>""" + str(datetime.datetime.fromtimestamp(v)) +'</td></tr>'
+            <td>""" + str(datetime.datetime.fromtimestamp(v)) + '</td></tr>'
             empty = 'n'
         if empty == 'y':
             delete_file_str = '''<tr><td>There is currently no backup file that need cleaning up. Cheers!</td>
@@ -121,7 +129,6 @@ class OldFileCleaner(object):
         <p><table width = "900" border ="1" cellspacing = "0" cellpadding = "2">
         <tr><td>Deleted file(s):</td><td>Backup file create date:</td></tr>''' + delete_file_str \
                        + "</table></p><p>Powered by LEOD.</p></body></html>"
-        from mail_sender import mail_sender
         mail_sender(mail_subject="Old backup files have been handled", mail_content=mail_content)
 
     '''

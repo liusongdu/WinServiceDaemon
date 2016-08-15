@@ -28,4 +28,4 @@ def mail_sender(mail_subject="test", mail_content="test"):
     s.sendmail(SETTING_from_mailbox, tolist, msg.as_string())
     s.quit()
 
-mail_sender(mail_subject="test of subject", mail_content="test of content")
+# mail_sender(mail_subject="test of subject", mail_content="test of content")
