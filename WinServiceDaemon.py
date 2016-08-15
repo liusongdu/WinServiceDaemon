@@ -15,8 +15,8 @@ import sys, string
 import time
 import warnings, win32api, win32con, winerror, win32event, win32evtlogutil, win32service, win32serviceutil
 import servicemanager
-
 from ConfigurationReader import ConfigurationReader  # 前面是模块名，后面是类名
+
 c = ConfigurationReader()
 SETTING_svc_name, SETTING_svc_display_name, SETTING_svc_description = \
     c.read_configuration('name', 'svc_name', 'svc_display_name', 'svc_description')

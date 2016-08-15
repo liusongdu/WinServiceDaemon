@@ -8,14 +8,10 @@ import time
 from ConfigurationReader import ConfigurationReader  # 前面是模块名，后面是类名
 from mail_sender import mail_sender
 
-
 timeformat = '%Y-%m-%d %H:%M:%S'
 
 c = ConfigurationReader()
 STATIC_SETTING_base_dir, STATIC_SETTING_subfolder = c.read_configuration('path', 'base_dir', 'subfolder')
-
-# c = ConfigurationReader()
-# SETTING_subfolder = c.read_configuration('path', 'subfolder')
 subfolder_list = STATIC_SETTING_subfolder.split(', ')
 
 class Timeconvert(object):
@@ -38,9 +34,9 @@ class Timeconvert(object):
 
 class OldFileCleaner(object):
     def __init__(self):
-        self.age_day = 2
+        self.age_day = 0
         self.age_hour = 0
-        self.subfolder_list = ['test']
+        self.subfolder_list = []
 
     def list_path(self, subfolder_list):
         """ list all file names including full paths to them
@@ -142,8 +138,6 @@ class OldFileCleaner(object):
         time_float = time.mktime(time.strptime(time_str, timeformat))  # type is converted to float
         return time_float
     '''
-
-
 
 ''''
 os.getcwd()：获得当前工作目录

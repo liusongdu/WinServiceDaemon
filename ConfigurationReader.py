@@ -33,9 +33,6 @@ class ConfigurationReader():
                 l.append(i)
             return l
 
-# c = ConfigurationReader()
-# d = c.read_configuration('path', 'base_dir', 'service_restarted')
-
 # class A(object):
 #     def b(self):
 #         pass
