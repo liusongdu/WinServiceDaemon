@@ -11,8 +11,8 @@ from mail_sender import mail_sender
 timeformat = '%Y-%m-%d %H:%M:%S'
 
 c = ConfigurationReader()
-STATIC_SETTING_base_dir, STATIC_SETTING_subfolder = c.read_configuration('path', 'base_dir', 'subfolder')
-subfolder_list = STATIC_SETTING_subfolder.split(', ')
+SETTING_base_dir, SETTING_subfolder = c.read_configuration('path', 'base_dir', 'subfolder')
+subfolder_list = SETTING_subfolder.split(', ')
 
 class Timeconvert(object):
     """convert datetime to float
@@ -47,7 +47,7 @@ class OldFileCleaner(object):
         """
         path_list_internal = []
         for i in range(0, len(subfolder_list)):  # at first, i = 0
-            path1 = os.path.join(STATIC_SETTING_base_dir, subfolder_list[i])
+            path1 = os.path.join(SETTING_base_dir, subfolder_list[i])
             # D:/pyRegularExpression/Results/test/1
             if os.path.isdir(path1):
                 # os.path.isdir(path)判断path是不是一个目录，path不是目录就返回false

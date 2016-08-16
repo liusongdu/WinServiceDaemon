@@ -16,6 +16,7 @@ import time
 import warnings, win32api, win32con, winerror, win32event, win32evtlogutil, win32service, win32serviceutil
 import servicemanager
 from ConfigurationReader import ConfigurationReader  # 前面是模块名，后面是类名
+from file_handler import call_OldFileCleaner_func
 
 c = ConfigurationReader()
 SETTING_svc_name, SETTING_svc_display_name, SETTING_svc_description = \
@@ -58,69 +59,71 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                               (self._svc_name_, ''))
         # This is how long the service will wait to run / refresh itself (see script below)
         logging.basicConfig(filename=SETTING_logfile, filemode='a', level=logging.DEBUG)
-        # logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
+        logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
         # logging.info("INFO. So should this one. Remove this one when complete")
         # logging.warning("WARNING. And this one, too. Remove this one when complete")
-        self.main()
 
-    def service_restart(self):
-         # Use minidom Xlator to open XML doc
-        dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
-        collection = dom_tree.documentElement
-        if collection.hasAttribute("shelf"):
-            logging.debug("Root element : %s #Remove this one when complete"
-                          % collection.getAttribute("shelf"))
-        # Obtain all services from collection
-        services = collection.getElementsByTagName("Service")
-        # Print all services' detail info
-        for each_service in services:
-            if each_service.hasAttribute("title"):
-                # print ("Title: %s" % Service.getAttribute("title"))
-                service_name = each_service.getElementsByTagName('ServiceName')[0].childNodes[0].data
-                # print ("ServiceName: %s" % ServiceName.childNodes[0].data)
-                restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
-                # print ("RestartPeriod in Sec: %s" % RestartPeriodInSec.childNodes[0].data)
-                restart_period_float = float(restart_period_sec.childNodes[0].data)
-                # print (Float_RestartPeriod)
-        win32serviceutil.RestartService(service_name)
-        # print ("%s You should not see me. I\'m in main Func()" % time.asctime(time.localtime(time.time())))
-        logging.debug("%s : Service restarted" % time.asctime(time.localtime(time.time())))
-        time.sleep(restart_period_float)  # sleep time = self.timeout + Float_RestartPeriod
-        self.main()
-
-    def clean_old_file(self):
-        while True:
-            dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
-            collection = dom_tree.documentElement
-            services = collection.getElementsByTagName("Service")
-            for each_service in services:
-                if each_service.hasAttribute("title"):
-                    restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
-                    restart_period_float = float(restart_period_sec.childNodes[0].data)
-            if not self.stop_requested:
-                from file_handler import call_OldFileCleaner_func
-                call_OldFileCleaner_func()
-                time.sleep(restart_period_float)
-            else:
-                self.main()
-
-    def main(self):
-        while True:
+        while True:  ##########################################################################################
             # Wait for service stop signal, if I timeout, loop again
             rc = win32event.WaitForSingleObject(self.hWaitStop, self.timeout)
             # Check to see if self.hWaitStop happened
-            if self.stop_requested:
+            if win32event.WAIT_OBJECT_0 == rc:
+            # if self.stop_requested:
                 # Stop signal encountered
                 servicemanager.LogInfoMsg("%s service has stopped." % SETTING_svc_name)  # For Event Log
                 break
             else:
-                try:
-                    # cmd = 'self.' + 'service_restart' + '()'
-                    cmd = 'self.' + 'clean_old_file' + '()'
-                    exec(cmd)
-                    # self.clean_old_file()
-                except:
-                    pass
+                # cmd = 'self.' + 'service_restart' + '()'
+                # cmd = 'self.' + 'clean_old_file' + '()'
+                # exec(cmd)
+                # self.clean_old_file()
+                while True:  ###############################################################################
+                    dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
+                    collection = dom_tree.documentElement
+                    services = collection.getElementsByTagName("Service")
+                    for each_service in services:
+                        if each_service.hasAttribute("title"):
+                            restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
+                            restart_period_float = float(restart_period_sec.childNodes[0].data)
+                    interval = 20
+                    t = restart_period_float / interval  # cycle times
+
+                    call_OldFileCleaner_func()
+                    while t > 0:  ############################################################################
+                        t -= 1
+                        time.sleep(interval)
+                        if self.stop_requested:
+                            servicemanager.LogInfoMsg("%s service has stopped." % SETTING_svc_name)
+                            break  ## 3
+                    break  ## 2
+            break  ## 1
+
+
+    # def service_restart(self):
+    #      # Use minidom Xlator to open XML doc
+    #     dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
+    #     collection = dom_tree.documentElement
+    #     if collection.hasAttribute("shelf"):
+    #         logging.debug("Root element : %s #Remove this one when complete"
+    #                       % collection.getAttribute("shelf"))
+    #     # Obtain all services from collection
+    #     services = collection.getElementsByTagName("Service")
+    #     # Print all services' detail info
+    #     for each_service in services:
+    #         if each_service.hasAttribute("title"):
+    #             # print ("Title: %s" % Service.getAttribute("title"))
+    #             service_name = each_service.getElementsByTagName('ServiceName')[0].childNodes[0].data
+    #             # print ("ServiceName: %s" % ServiceName.childNodes[0].data)
+    #             restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
+    #             # print ("RestartPeriod in Sec: %s" % RestartPeriodInSec.childNodes[0].data)
+    #             restart_period_float = float(restart_period_sec.childNodes[0].data)
+    #             # print (Float_RestartPeriod)
+    #     win32serviceutil.RestartService(service_name)
+    #     # print ("%s You should not see me. I\'m in main Func()" % time.asctime(time.localtime(time.time())))
+    #     logging.debug("%s : Service restarted" % time.asctime(time.localtime(time.time())))
+    #     time.sleep(restart_period_float)  # sleep time = self.timeout + Float_RestartPeriod
+
+
 
 def ctrl_handler(ctrlType):
     return True
