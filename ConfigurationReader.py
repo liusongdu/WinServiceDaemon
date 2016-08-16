@@ -1,42 +1,49 @@
 # -*- coding: utf-8 -*-
 
-from ConfigParser import ConfigParser
+# Check current Python version: Python 2 or 3 ?
+class A(object):
+    def b(self):
+        pass
+if A.b is A.b:
+    # Python3
+    from configparser import ConfigParser
+else:
+    # Python2
+    from ConfigParser import ConfigParser
+import os
+import sys
 
 # Switch prod and dev settings here
 ENVIRONMENT = 'develop'
 # ENVIRONMENT = 'production'
 
-class ConfigurationReader():
+class ConfigurationReader(object):
 
+    APP_BASE_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
     if 'develop' == ENVIRONMENT:
-        CONFIGFILE = "D:\\GitHub\\repositories\\WinServiceDaemon\\setting\\dev_setting.cfg"
+        CONFIGFILE = APP_BASE_DIR + "/setting/dev_setting.cfg"
     else:
-        # CONFIGFILE = "D:\\NNIT_APP\\WinServiceDaemon\\setting\\prod_setting.cfg"  # real production env
-        CONFIGFILE = "D:\\GitHub\\repositories\\WinServiceDaemon\\setting\\prod_setting.cfg"  # fake production env
+        CONFIGFILE = APP_BASE_DIR + "/setting/prod_setting.cfg"
     config = ConfigParser()
     config.read(CONFIGFILE)
 
-    def __init__(self):
-        # self.config = config
-        return
+    # def __init__(self):
+    #     return
+
+    # def read_configuration(self, section, *args):
+    #     if 1 == len(args):  # good habit
+    #         # if only one param, then no need to be a list type
+    #         s = self.config.get(section, args[0])
+    #         return s
+    #     else:
+    #         # if move than one param have been passed here, then use list type
+    #         l = []
+    #         for i in args:
+    #             i = self.config.get(section, i)
+    #             l.append(i)
+    #         return l
 
     def read_configuration(self, section, *args):
-        if 1 == len(args):  # good habit
-            # if only one param, then no need to be a list type
-            s = self.config.get(section, args[0])
-            return s
-        else:
-            # if move than one param have been passed here, then use list type
-            l = []
-            for i in args:
-                i = self.config.get(section, i)
-                l.append(i)
-            return l
-
-# class A(object):
-#     def b(self):
-#         pass
-# if A.b is A.b:
-#     # Python3
-# else:
-#     # Python2
+        for i in args:
+            c = self.config.get(section, i)
+            yield c

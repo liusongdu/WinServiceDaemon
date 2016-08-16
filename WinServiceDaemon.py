@@ -20,9 +20,9 @@ from file_handler import call_OldFileCleaner_func
 
 c = ConfigurationReader()
 SETTING_svc_name, SETTING_svc_display_name, SETTING_svc_description = \
-    c.read_configuration('name', 'svc_name', 'svc_display_name', 'svc_description')
+    (x for x in c.read_configuration('name', 'svc_name', 'svc_display_name', 'svc_description'))
 SETTING_logfile, SETTING_service_restarted = \
-    c.read_configuration('path', 'logfile', 'service_restarted')
+    (x for x in c.read_configuration('path', 'logfile', 'service_restarted'))
 
 class WinServicesDaemon(win32serviceutil.ServiceFramework):
     """
@@ -63,7 +63,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
         # logging.info("INFO. So should this one. Remove this one when complete")
         # logging.warning("WARNING. And this one, too. Remove this one when complete")
 
-        while True:  ##########################################################################################
+        while True:  # ###############################################################################################1
             # Wait for service stop signal, if I timeout, loop again
             rc = win32event.WaitForSingleObject(self.hWaitStop, self.timeout)
             # Check to see if self.hWaitStop happened
@@ -77,7 +77,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                 # cmd = 'self.' + 'clean_old_file' + '()'
                 # exec(cmd)
                 # self.clean_old_file()
-                while True:  ###############################################################################
+                while True:  # #######################################################################################2
                     dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
                     collection = dom_tree.documentElement
                     services = collection.getElementsByTagName("Service")
@@ -89,7 +89,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                     t = restart_period_float / interval  # cycle times
 
                     call_OldFileCleaner_func()
-                    while t > 0:  ############################################################################
+                    while t > 0:  # ##################################################################################3
                         t -= 1
                         time.sleep(interval)
                         if self.stop_requested:
@@ -122,8 +122,6 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
     #     # print ("%s You should not see me. I\'m in main Func()" % time.asctime(time.localtime(time.time())))
     #     logging.debug("%s : Service restarted" % time.asctime(time.localtime(time.time())))
     #     time.sleep(restart_period_float)  # sleep time = self.timeout + Float_RestartPeriod
-
-
 
 def ctrl_handler(ctrlType):
     return True

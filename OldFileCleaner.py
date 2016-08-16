@@ -11,7 +11,8 @@ from mail_sender import mail_sender
 timeformat = '%Y-%m-%d %H:%M:%S'
 
 c = ConfigurationReader()
-SETTING_base_dir, SETTING_subfolder = c.read_configuration('path', 'base_dir', 'subfolder')
+SETTING_base_dir, SETTING_subfolder = \
+    (x for x in c.read_configuration('path', 'base_dir', 'subfolder'))
 subfolder_list = SETTING_subfolder.split(', ')
 
 class Timeconvert(object):
