@@ -14,16 +14,19 @@ import os
 import sys
 
 # Switch prod and dev settings here
-ENVIRONMENT = 'develop'
 # ENVIRONMENT = 'production'
+ENVIRONMENT = 'develop'
+# ENVIRONMENT = 'demo'
 
 class ConfigurationReader(object):
 
     APP_BASE_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
-    if 'develop' == ENVIRONMENT:
+    if 'production' == ENVIRONMENT:
+        CONFIGFILE = APP_BASE_DIR + "/setting/prod_setting.cfg"
+    elif 'develop' == ENVIRONMENT:
         CONFIGFILE = APP_BASE_DIR + "/setting/dev_setting.cfg"
     else:
-        CONFIGFILE = APP_BASE_DIR + "/setting/prod_setting.cfg"
+        CONFIGFILE = APP_BASE_DIR + "/setting/demo_setting.cfg"
     config = ConfigParser()
     config.read(CONFIGFILE)
 
