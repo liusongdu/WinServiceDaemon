@@ -1,0 +1,6 @@
+<collection shelf="ServiceList">
+<Service title="Service1">
+   <ServiceName>W32Time</ServiceName>
+   <RestartPeriodInSec>300</RestartPeriodInSec>
+</Service>
+</collection>

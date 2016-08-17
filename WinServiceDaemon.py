@@ -46,8 +46,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         self.stop_requested = False
-        # self.timeout = 640000  # 640 seconds / 10 minutes (value is in milliseconds)
-        self.timeout = 10000    # 120 seconds / 2 minutes
+        self.timeout = 10000    # in milliseconds
 
     def SvcStop(self):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -59,11 +58,11 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                               (self._svc_name_, ''))
         # This is how long the service will wait to run / refresh itself (see script below)
         logging.basicConfig(filename=SETTING_logfile, filemode='a', level=logging.DEBUG)
-        logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
+        # logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
         # logging.info("INFO. So should this one. Remove this one when complete")
         # logging.warning("WARNING. And this one, too. Remove this one when complete")
 
-        while True:  # ###############################################################################################1
+        while True:  # 1st while cycle
             # Wait for service stop signal, if I timeout, loop again
             rc = win32event.WaitForSingleObject(self.hWaitStop, self.timeout)
             # Check to see if self.hWaitStop happened
@@ -77,7 +76,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                 # cmd = 'self.' + 'clean_old_file' + '()'
                 # exec(cmd)
                 # self.clean_old_file()
-                while True:  # #######################################################################################2
+                while True:  # 2nd while cycle
                     dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
                     collection = dom_tree.documentElement
                     services = collection.getElementsByTagName("Service")
@@ -85,19 +84,21 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                         if each_service.hasAttribute("title"):
                             restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
                             restart_period_float = float(restart_period_sec.childNodes[0].data)
+
+                    # |<-- Between lines are for fixing this installed service cannot stop issue
+                    # The stop attempt would time out if there is long time of sleep
                     interval = 20
                     t = restart_period_float / interval  # cycle times
-
                     call_OldFileCleaner_func()
-                    while t > 0:  # ##################################################################################3
+                    while t > 0:  # 3rd while cycle
                         t -= 1
                         time.sleep(interval)
                         if self.stop_requested:
                             servicemanager.LogInfoMsg("%s service has stopped." % SETTING_svc_name)
-                            break  ## 3
-                    break  ## 2
-            break  ## 1
-
+                            break  # break the 3rd while cycle
+                    break  # break the 2nd while cycle
+            break  # break the 1st while cycle
+                    # -->|
 
     # def service_restart(self):
     #      # Use minidom Xlator to open XML doc
