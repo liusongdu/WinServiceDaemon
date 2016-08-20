@@ -10,6 +10,7 @@ if A.b is A.b:
 else:
     # Python2
     from ConfigParser import ConfigParser
+# from ConfigParser import ConfigParser
 import os
 import sys
 
@@ -20,11 +21,16 @@ ENVIRONMENT = 'develop'
 
 class ConfigurationReader(object):
 
-    APP_BASE_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
+    # sys.path.append(r"D:\GitHub\repositories\WinServiceDaemon")
+    # APP_BASE_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
+    # APP_BASE_DIR = os.path.split(os.path.realpath(sys.argv[0]))[0]
+    APP_BASE_DIR = r"D:\GitHub\repositories\WinServiceDaemon"
+
     if 'production' == ENVIRONMENT:
         CONFIGFILE = APP_BASE_DIR + "/setting/prod_setting.cfg"
     elif 'develop' == ENVIRONMENT:
-        CONFIGFILE = APP_BASE_DIR + "/setting/dev_setting.cfg"
+        CONFIGFILE = os.path.normpath(APP_BASE_DIR + "/setting/dev_setting.cfg")  # 规范path字符串形式
+        # CONFIGFILE = r"D:\GitHub\repositories\WinServiceDaemon\setting\dev_setting.cfg"
     else:
         CONFIGFILE = APP_BASE_DIR + "/setting/demo_setting.cfg"
     config = ConfigParser()
@@ -33,20 +39,12 @@ class ConfigurationReader(object):
     # def __init__(self):
     #     return
 
-    # def read_configuration(self, section, *args):
-    #     if 1 == len(args):  # good habit
-    #         # if only one param, then no need to be a list type
-    #         s = self.config.get(section, args[0])
-    #         return s
-    #     else:
-    #         # if move than one param have been passed here, then use list type
-    #         l = []
-    #         for i in args:
-    #             i = self.config.get(section, i)
-    #             l.append(i)
-    #         return l
-
     def read_configuration(self, section, *args):
         for i in args:
             c = self.config.get(section, i)
             yield c
+
+if __name__ == "__main__":
+    print(os.path.realpath(sys.argv[0]))
+    print(os.path.split(os.path.realpath(sys.argv[0])))
+    print(os.path.split(os.path.realpath(sys.argv[0]))[0])

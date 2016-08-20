@@ -19,7 +19,13 @@ def mail_sender(mail_subject="test", mail_content="test"):
     msg['Subject'] = mail_subject
     msg['From'] = SETTING_from_mailbox
     msg['To'] = SETTING_to_mailbox
-    msg.attach(MIMEText(mail_content, 'html'))
+    mail_body = '''<html><head></head><body>
+    <p>An automatic job has run completely, which is to clean up old backup file(s) more than 2 days.<br/>
+    Refer to below report.</p>
+    <p><table width = "900" border ="1" cellspacing = "0" cellpadding = "2">
+    <tr><td>Deleted file(s):</td><td>Backup file create date:</td></tr>''' + mail_content \
+                + "</table></p><p>Powered by LEOD.</p></body></html>"
+    msg.attach(MIMEText(mail_body, 'html'))
     s = smtplib.SMTP(SETTING_mail_server)
     if 'develop' == SETTING_environment:
         s.starttls()

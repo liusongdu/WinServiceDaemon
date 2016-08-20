@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 # WinServicesDaemon
-
-### Usage : python ***.py install (or / then start, stop, remove)
-# Run Python scripts as WinService
-# Register as WinService: ...>RestartServiceSchedule.py install
+# Usage: python WinServiceDaemon.py install (or / then start, stop, remove)
 
 from xml.dom.minidom import parse
 from concurrent.futures import *
@@ -16,15 +13,19 @@ import time
 import warnings, win32api, win32con, winerror, win32event, win32evtlogutil, win32service, win32serviceutil
 import servicemanager
 from ConfigurationReader import ConfigurationReader  # 前面是模块名，后面是类名
-from file_handler import call_OldFileCleaner_func
+# from file_handler import call_OldFileCleaner_func
 
+APP_BASE_DIR = r"D:\GitHub\repositories\WinServiceDaemon"
 c = ConfigurationReader()
 SETTING_svc_name, SETTING_svc_display_name, SETTING_svc_description = \
     (x for x in c.read_configuration('name', 'svc_name', 'svc_display_name', 'svc_description'))
 SETTING_logfile, SETTING_service_restarted = \
-    (x for x in c.read_configuration('path', 'logfile', 'service_restarted'))
+    ((APP_BASE_DIR + x) for x in c.read_configuration('path', 'logfile', 'service_restarted'))
+logging.basicConfig(filename=SETTING_logfile, filemode='a', level=logging.DEBUG)
+APP_BASE_DIR = os.path.split(os.path.realpath(sys.argv[0]))[0]
+# print(os.path.abspath(sys.argv[0]))
 
-class WinServicesDaemon(win32serviceutil.ServiceFramework):
+class WinServiceDaemon(win32serviceutil.ServiceFramework):
     """
     API docstring: win32serviceutil is a Python file (module) @ D:\Python34\Lib\site-packages\win32\lib\win32serviceutil.py.
     ServiceFramework is a class within win32serviceutil.py.
@@ -47,23 +48,25 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
         self.stop_requested = False
         self.timeout = 10000    # in milliseconds
+        logging.debug("Initiated")
 
     def SvcStop(self):
+        logging.debug("stop")
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
         self.stop_requested = True
 
     def SvcDoRun(self):
+        logging.debug("start1")
         servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED,
                               (self._svc_name_, ''))
         # This is how long the service will wait to run / refresh itself (see script below)
-        logging.basicConfig(filename=SETTING_logfile, filemode='a', level=logging.DEBUG)
-        # logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
+
+        logging.debug("DEBUG. This msg should go to the log file. Remove this one when complete")
         # logging.info("INFO. So should this one. Remove this one when complete")
         # logging.warning("WARNING. And this one, too. Remove this one when complete")
-
-        while True:  # 1st while cycle
-            # Wait for service stop signal, if I timeout, loop again
+        while True:  # 1st while cycle.
+            # Wait for service stop signal, if timeout, loop again
             rc = win32event.WaitForSingleObject(self.hWaitStop, self.timeout)
             # Check to see if self.hWaitStop happened
             if win32event.WAIT_OBJECT_0 == rc:
@@ -72,14 +75,11 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                 servicemanager.LogInfoMsg("%s service has stopped." % SETTING_svc_name)  # For Event Log
                 break
             else:
-                # cmd = 'self.' + 'service_restart' + '()'
-                # cmd = 'self.' + 'clean_old_file' + '()'
-                # exec(cmd)
-                # self.clean_old_file()
                 while True:  # 2nd while cycle
                     dom_tree = xml.dom.minidom.parse(SETTING_service_restarted)
                     collection = dom_tree.documentElement
                     services = collection.getElementsByTagName("Service")
+                    restart_period_float = 0
                     for each_service in services:
                         if each_service.hasAttribute("title"):
                             restart_period_sec = each_service.getElementsByTagName('RestartPeriodInSec')[0]
@@ -87,9 +87,11 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
 
                     # |<-- Between lines are for fixing this installed service cannot stop issue
                     # The stop attempt would time out if there is long time of sleep
+                    # from OldFileCleaner import OldFileCleaner
+                    # c1 = OldFileCleaner()
+                    # c1.check_file_age()
                     interval = 20
                     t = restart_period_float / interval  # cycle times
-                    call_OldFileCleaner_func()
                     while t > 0:  # 3rd while cycle
                         t -= 1
                         time.sleep(interval)
@@ -97,7 +99,7 @@ class WinServicesDaemon(win32serviceutil.ServiceFramework):
                             servicemanager.LogInfoMsg("%s service has stopped." % SETTING_svc_name)
                             break  # break the 3rd while cycle
                     break  # break the 2nd while cycle
-            break  # break the 1st while cycle
+            # break  # break the 1st while cycle
                     # -->|
 
     # def service_restart(self):
@@ -129,4 +131,4 @@ def ctrl_handler(ctrlType):
 
 if __name__ == '__main__':
     win32api.SetConsoleCtrlHandler(ctrl_handler, True)
-    win32serviceutil.HandleCommandLine(WinServicesDaemon)
+    win32serviceutil.HandleCommandLine(WinServiceDaemon)
